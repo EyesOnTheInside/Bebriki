@@ -5,6 +5,7 @@
 
 Syntaxer::Syntaxer()
 {
+    m_out.open("out.txt");
 	m_st.push(ADOG);
 	m_st.push(APROGRAMM);
 	m_poz = 0;
@@ -73,8 +74,10 @@ Syntaxer::~Syntaxer()
 std::vector<std::vector<std::string>> Syntaxer::Run(std::vector<Token> lexems)
 {
 	m_lex = lexems;
+    m_i = 0;
 	while (m_i != m_lex.size()) 
 	{
+
 		if (m_line.size() == 0) 
 		{
 			if (f1())
@@ -165,20 +168,27 @@ std::vector<std::vector<std::string>> Syntaxer::Run(std::vector<Token> lexems)
 	}
 	m_key = true;
 	f26();
-
+    bool err = false;
 	for (int i = 0; i < m_is_correct.size(); i++)
-		if (!m_is_correct[i]) { std::cout << "String " << i + 1 << " has some errors. You must fix it or destroy this string" << std::endl; m_key = false; }
-	if (!m_key) std::cout << "Program contains too much exeptions, fix them" << std::endl;
-	else std::cout << "Program was accepted for translation" << std::endl;
-
+        if (!m_is_correct[i]) { m_out << "String " << i + 1 << " has some errors. You must fix it or destroy this string" << std::endl; m_key = false; err = true; }
+    if (!m_key) m_out << "Program contains too much exeptions, fix them" << std::endl;
+    if (err){
+        m_lines.clear();
+        std::vector<std::string> error;
+        error.push_back("Error");
+        m_lines.push_back(error);
+    }
+    //m_lines.push_back({"aaaa", "aaaa"});
+    //qDebug() << "m_lines in sy =" << m_lines.size();
 	return m_lines;
 }
 
 bool Syntaxer::f1() 
 {
 	m_key = false;
-	if (m_lex[m_i].lexem_type == "Mark") 
+    if (m_lex[m_i].lexem_type == "Mark")
 	{
+
 		m_marks.push_back(std::stoi(m_lex[m_i].lexem_name));
 		m_line.push_back(m_lex[m_i].lexem_name);
 		m_i++;
@@ -192,7 +202,7 @@ bool Syntaxer::f1()
 	{
 		m_is_correct.push_back(false);
 		m_i++;
-		while ((m_i < m_lex.size() - 1) and (m_lex[m_i - 1].line == m_lex[m_i].line))
+        while ((m_i < m_lex.size() - 1) && (m_lex[m_i - 1].line == m_lex[m_i].line))
 			m_i++;
 		return true;
 	}
@@ -216,14 +226,14 @@ void Syntaxer::f3()
 		m_i++;
 		m_brackets = 0;
 		m_key = true;
-		if ((m_lex[m_i].lexem_type == "Variable") and (m_lex[m_i - 1].line == m_lex[m_i].line)) 
+        if ((m_lex[m_i].lexem_type == "Variable") && (m_lex[m_i - 1].line == m_lex[m_i].line))
 		{
 			m_line.push_back(m_lex[m_i].lexem_name);
 			m_i++;
 		}
 		else
 			m_key = false;
-		if ((m_lex[m_i].lexem_type == "Equality") and (m_lex[m_i - 1].line == m_lex[m_i].line)) 
+        if ((m_lex[m_i].lexem_type == "Equality") && (m_lex[m_i - 1].line == m_lex[m_i].line))
 		{
 			m_line.push_back(std::string("="));
 			m_i++;
@@ -231,7 +241,7 @@ void Syntaxer::f3()
 		else
 			m_key = false;
 		f4();
-		if ((!m_key) or (m_lex[m_i - 1].lexem_type == "Equality") or (m_lex[m_i - 1].lexem_type == "AR_OP") or (m_brackets != 0)) 
+        if ((!m_key) || (m_lex[m_i - 1].lexem_type == "Equality") || (m_lex[m_i - 1].lexem_type == "AR_OP") || (m_brackets != 0))
 		{
 			m_is_correct.push_back(false);
 			while (m_lex[m_i - 1].line == m_lex[m_i].line)
@@ -259,28 +269,28 @@ void Syntaxer::f3()
 
 void Syntaxer::f4()
 {
-	while ((m_lex[m_i].line == m_lex[m_i - 1].line) and (m_key)) 
+    while ((m_lex[m_i].line == m_lex[m_i - 1].line) && (m_key))
 	{
 		if (m_lex[m_i].lexem_type == "Variable") 
 		{
-			if ((m_lex[m_i - 1].lexem_type == "Variable") or (m_lex[m_i - 1].lexem_type == "Constant") 
-				or (m_lex[m_i - 1].lexem_type == "Rigth_bracket")) { m_key = false; break; }
+            if ((m_lex[m_i - 1].lexem_type == "Variable") || (m_lex[m_i - 1].lexem_type == "Constant")
+                || (m_lex[m_i - 1].lexem_type == "Rigth_bracket")) { m_key = false; break; }
 			m_line.push_back(m_lex[m_i].lexem_name);
 			m_i++;
 			continue;
 		}
 		if (m_lex[m_i].lexem_type == "Constant") 
 		{
-			if ((m_lex[m_i - 1].lexem_type == "Variable") or (m_lex[m_i - 1].lexem_type == "Constant") 
-				or (m_lex[m_i - 1].lexem_type == "Rigth_bracket")) { m_key = false; break; }
+            if ((m_lex[m_i - 1].lexem_type == "Variable") || (m_lex[m_i - 1].lexem_type == "Constant")
+                || (m_lex[m_i - 1].lexem_type == "Rigth_bracket")) { m_key = false; break; }
 			m_line.push_back(m_lex[m_i].lexem_name);
 			m_i++;
 			continue;
 		}
 		if (m_lex[m_i].lexem_type == "Left_bracket") 
 		{
-			if ((m_lex[m_i - 1].lexem_type == "Variable") or (m_lex[m_i - 1].lexem_type == "Constant") 
-				or (m_lex[m_i - 1].lexem_type == "Rigth_bracket")) { m_key = false; break; }
+            if ((m_lex[m_i - 1].lexem_type == "Variable") || (m_lex[m_i - 1].lexem_type == "Constant")
+                || (m_lex[m_i - 1].lexem_type == "Rigth_bracket")) { m_key = false; break; }
 			m_line.push_back(m_lex[m_i].lexem_name);
 			m_brackets++;
 			m_i++;
@@ -288,7 +298,7 @@ void Syntaxer::f4()
 		}
 		if (m_lex[m_i].lexem_type == "Right_bracket") 
 		{
-			if ((m_lex[m_i - 1].lexem_type == "AR_OP") or (m_lex[m_i - 1].lexem_type == "Left_bracket")) { m_key = false; break; }
+            if ((m_lex[m_i - 1].lexem_type == "AR_OP") || (m_lex[m_i - 1].lexem_type == "Left_bracket")) { m_key = false; break; }
 			m_line.push_back(m_lex[m_i].lexem_name);
 			m_brackets--;
 			m_i++;
@@ -296,15 +306,15 @@ void Syntaxer::f4()
 		}
 		if (m_lex[m_i].lexem_type == "AR_OP") 
 		{
-			if ((m_lex[m_i - 1].lexem_type == "Equality") or (m_lex[m_i - 1].lexem_type == "AR_OP") 
-				or (m_lex[m_i - 1].lexem_type == "Left_bracket")) { m_key = false; break; }
+            if ((m_lex[m_i - 1].lexem_type == "Equality") || (m_lex[m_i - 1].lexem_type == "AR_OP")
+                || (m_lex[m_i - 1].lexem_type == "Left_bracket")) { m_key = false; break; }
 			m_line.push_back(m_lex[m_i].lexem_name);
 			m_i++;
 			continue;
 		}
 		if (m_lex[m_i].lexem_type == "k_rem") 
 		{
-			if ((m_brackets != 0) or (m_lex[m_i - 1].lexem_type == "Equality") or (m_lex[m_i - 1].lexem_type == "AR_OP")) m_key = false;
+            if ((m_brackets != 0) || (m_lex[m_i - 1].lexem_type == "Equality") || (m_lex[m_i - 1].lexem_type == "AR_OP")) m_key = false;
 			break;
 		}
 		m_key = false;
@@ -368,7 +378,7 @@ void Syntaxer::f7()
 			m_i++;
 		return;
 	}//err
-	if ((m_lex[m_i + 2].line == m_lex[m_i].line) and (m_lex[m_i + 2].lexem_type != "k_rem")) 
+    if ((m_lex[m_i + 2].line == m_lex[m_i].line) && (m_lex[m_i + 2].lexem_type != "k_rem"))
 	{
 		m_line.clear();
 		m_is_correct.push_back(false);
@@ -398,7 +408,7 @@ void Syntaxer::f9()
 {
 	m_for_next.push_back(m_lex[m_i].line);
 	m_line.push_back(m_lex[m_i].lexem_name);
-	if ((m_lex[m_i + 1].line != m_lex[m_i].line) or (m_lex[m_i + 1].lexem_type != "Variable"))
+    if ((m_lex[m_i + 1].line != m_lex[m_i].line) || (m_lex[m_i + 1].lexem_type != "Variable"))
 	{
 		m_is_correct.push_back(false);
 		while (m_lex[m_i - 1].line == m_lex[m_i].line)
@@ -408,7 +418,7 @@ void Syntaxer::f9()
 	}
 	m_i++;
 	m_line.push_back(m_lex[m_i].lexem_name);
-	if ((m_lex[m_i + 1].line != m_lex[m_i].line) or (m_lex[m_i + 1].lexem_type != "Equality"))
+    if ((m_lex[m_i + 1].line != m_lex[m_i].line) || (m_lex[m_i + 1].lexem_type != "Equality"))
 	{
 		m_is_correct.push_back(false);
 		while (m_lex[m_i - 1].line == m_lex[m_i].line)
@@ -418,7 +428,7 @@ void Syntaxer::f9()
 	}
 	m_i++;
 	m_line.push_back(m_lex[m_i].lexem_name);
-	if ((m_lex[m_i + 1].line != m_lex[m_i].line) or (m_lex[m_i + 1].lexem_type != "Constant"))
+    if ((m_lex[m_i + 1].line != m_lex[m_i].line) || (m_lex[m_i + 1].lexem_type != "Constant"))
 	{
 		m_is_correct.push_back(false);
 		while (m_lex[m_i - 1].line == m_lex[m_i].line)
@@ -428,7 +438,7 @@ void Syntaxer::f9()
 	}
 	m_i++;
 	m_line.push_back(m_lex[m_i].lexem_name);
-	if ((m_lex[m_i + 1].line != m_lex[m_i].line) or (m_lex[m_i + 1].lexem_type != "k_to"))
+    if ((m_lex[m_i + 1].line != m_lex[m_i].line) || (m_lex[m_i + 1].lexem_type != "k_to"))
 	{
 		m_is_correct.push_back(false);
 		while (m_lex[m_i - 1].line == m_lex[m_i].line)
@@ -438,7 +448,7 @@ void Syntaxer::f9()
 	}
 	m_i++;
 	m_line.push_back(m_lex[m_i].lexem_name);
-	if ((m_lex[m_i + 1].line != m_lex[m_i].line) or ((m_lex[m_i + 1].lexem_type != "Constant") and (m_lex[m_i + 1].lexem_type != "Variable")))
+    if ((m_lex[m_i + 1].line != m_lex[m_i].line) || ((m_lex[m_i + 1].lexem_type != "Constant") && (m_lex[m_i + 1].lexem_type != "Variable")))
 	{
 		m_is_correct.push_back(false);
 		while (m_lex[m_i - 1].line == m_lex[m_i].line)
@@ -460,7 +470,7 @@ void Syntaxer::f9()
 		}
 		if (m_lex[m_i + 1].lexem_type == "k_step") 
 		{
-			if ((m_lex[m_i + 2].line == m_lex[m_i].line) and (m_lex[m_i + 2].lexem_type == "Constant")) 
+            if ((m_lex[m_i + 2].line == m_lex[m_i].line) && (m_lex[m_i + 2].lexem_type == "Constant"))
 			{
 				m_is_correct.push_back(true);
 				m_line.push_back(m_lex[m_i + 1].lexem_name);
@@ -518,7 +528,7 @@ bool Syntaxer::f13() {
 	m_i++;
 	if (m_lex[m_i].lexem_type == "Constant") 
 	{
-		if ((m_lex[m_i + 1].line == m_lex[m_i].line) and (m_lex[m_i + 1].lexem_type != "k_rem"))
+        if ((m_lex[m_i + 1].line == m_lex[m_i].line) && (m_lex[m_i + 1].lexem_type != "k_rem"))
 			m_key = false;
 		else 
 		{
@@ -532,7 +542,7 @@ bool Syntaxer::f13() {
 			return true;
 		}
 	}
-	if ((!m_key) or (m_brackets != 0)) 
+    if ((!m_key) || (m_brackets != 0))
 	{
 		m_is_correct.push_back(false);
 		while (m_lex[m_i - 1].line == m_lex[m_i].line)
@@ -569,27 +579,27 @@ void Syntaxer::f15()
 
 void Syntaxer::f16()
 {
-	while ((m_lex[m_i].line == m_lex[m_i - 1].line) and (m_lex[m_i].lexem_type != std::string("k_goto")) and (m_key)) 
+    while ((m_lex[m_i].line == m_lex[m_i - 1].line) && (m_lex[m_i].lexem_type != std::string("k_goto")) && (m_key))
 	{
 		if (m_lex[m_i].lexem_type == "Variable") {
-			if ((m_lex[m_i - 1].lexem_type == "Variable") or (m_lex[m_i - 1].lexem_type == "Constant") 
-				or (m_lex[m_i - 1].lexem_type == "Rigth_bracket")) { m_key = false; break; }
+            if ((m_lex[m_i - 1].lexem_type == "Variable") || (m_lex[m_i - 1].lexem_type == "Constant")
+                || (m_lex[m_i - 1].lexem_type == "Rigth_bracket")) { m_key = false; break; }
 			m_line.push_back(m_lex[m_i].lexem_name);
 			m_i++;
 			continue;
 		}
 		if (m_lex[m_i].lexem_type == "Constant") 
 		{
-			if ((m_lex[m_i - 1].lexem_type == "Variable") or (m_lex[m_i - 1].lexem_type == "Constant") 
-				or (m_lex[m_i - 1].lexem_type == "Rigth_bracket")) { m_key = false; break; }
+            if ((m_lex[m_i - 1].lexem_type == "Variable") || (m_lex[m_i - 1].lexem_type == "Constant")
+                || (m_lex[m_i - 1].lexem_type == "Rigth_bracket")) { m_key = false; break; }
 			m_line.push_back(m_lex[m_i].lexem_name);
 			m_i++;
 			continue;
 		}
 		if (m_lex[m_i].lexem_type == "Left_bracket") 
 		{
-			if ((m_lex[m_i - 1].lexem_type == "Variable") or (m_lex[m_i - 1].lexem_type == "Constant") 
-				or (m_lex[m_i - 1].lexem_type == "Right_bracket")) { m_key = false; break; }
+            if ((m_lex[m_i - 1].lexem_type == "Variable") || (m_lex[m_i - 1].lexem_type == "Constant")
+                || (m_lex[m_i - 1].lexem_type == "Right_bracket")) { m_key = false; break; }
 			m_line.push_back(m_lex[m_i].lexem_name);
 			m_brackets++;
 			m_i++;
@@ -597,7 +607,7 @@ void Syntaxer::f16()
 		}
 		if (m_lex[m_i].lexem_type == "Right_bracket") 
 		{
-			if ((m_lex[m_i - 1].lexem_type == "AR_OP") or (m_lex[m_i - 1].lexem_type == "Left_bracket")) { m_key = false; break; }
+            if ((m_lex[m_i - 1].lexem_type == "AR_OP") || (m_lex[m_i - 1].lexem_type == "Left_bracket")) { m_key = false; break; }
 			m_line.push_back(m_lex[m_i].lexem_name);
 			m_brackets--;
 			if (m_brackets == -1) { break; }
@@ -606,16 +616,16 @@ void Syntaxer::f16()
 		}
 		if (m_lex[m_i].lexem_type == "AR_OP") 
 		{
-			if ((m_lex[m_i - 1].lexem_type == "Equality") or (m_lex[m_i - 1].lexem_type == "AR_OP") 
-				or (m_lex[m_i - 1].lexem_type == "Left_bracket")) { m_key = false; break; }
+            if ((m_lex[m_i - 1].lexem_type == "Equality") || (m_lex[m_i - 1].lexem_type == "AR_OP")
+                || (m_lex[m_i - 1].lexem_type == "Left_bracket")) { m_key = false; break; }
 			m_line.push_back(m_lex[m_i].lexem_name);
 			m_i++;
 			continue;
 		}
-		if ((m_lex[m_i].lexem_type == "Bool_op") or (m_lex[m_i].lexem_type == "Equality")) 
+        if ((m_lex[m_i].lexem_type == "Bool_op") || (m_lex[m_i].lexem_type == "Equality"))
 		{
-			if ((m_lex[m_i - 1].lexem_type == "Equality") or (m_lex[m_i - 1].lexem_type == "AR_OP") 
-				or (m_lex[m_i - 1].lexem_type == "Left_bracket") or (m_lex[m_i - 1].lexem_type == "Bool_op")) { m_key = false; break; }
+            if ((m_lex[m_i - 1].lexem_type == "Equality") || (m_lex[m_i - 1].lexem_type == "AR_OP")
+                || (m_lex[m_i - 1].lexem_type == "Left_bracket") || (m_lex[m_i - 1].lexem_type == "Bool_op")) { m_key = false; break; }
 			if (m_lex[m_i].lexem_type == "Bool_op") m_line.push_back(m_lex[m_i].lexem_name);
 			else m_line.push_back(std::string("="));
 			m_i++;
@@ -662,7 +672,7 @@ void Syntaxer::f19()
 {
 	m_line.push_back(m_lex[m_i].lexem_name);
 	m_key = true;
-	if ((m_lex[m_i + 1].line == m_lex[m_i].line) and (m_lex[m_i + 1].lexem_type != "k_rem"))
+    if ((m_lex[m_i + 1].line == m_lex[m_i].line) && (m_lex[m_i + 1].lexem_type != "k_rem"))
 		m_key = false;
 	if (m_key) 
 	{
@@ -773,18 +783,18 @@ void Syntaxer::f26()
 {
 	if (!m_is_ended) 
 	{
-		std::cout << "Program must exist operator end, but here its missed" << std::endl;
+        m_out << "Program must exist operator end, but here its missed\n";
 		m_key = false;
 	}
 	if (m_for_next.size() > 0) 
 	{
 		for (int i = 0; i < m_for_next.size(); i++)
-			std::cout << "All operators for must be closed by operator next, but this in line " << m_for_next[i] << " is not closed" << std::endl;
+            m_out << "All operators for must be closed by operator next, but this in line " << m_for_next[i] << " is not closed" << std::endl;
 		m_key = false;
 	}
 	if (m_gosub_return > 0) 
 	{
-		std::cout << "Program must exisr operators return for all operators gosub, but this has not " << m_gosub_return << " operators return" << std::endl;
+        m_out << "Program must exist operators return for all operators gosub, but this has not " << m_gosub_return << " operators return" << std::endl;
 		m_key = false;
 	}
 	if (m_labels.size() > 0) 
@@ -801,7 +811,7 @@ void Syntaxer::f26()
 				}
 			if (!check) 
 			{
-				std::cout << "Program is not exist label " << m_labels[0] << std::endl;
+                m_out << "Program is not exist label " << m_labels[0] << std::endl;
 				m_key = false;
 				m_labels.erase(m_labels.begin());
 			}
@@ -828,12 +838,13 @@ void Syntaxer::f28()
 {
 	m_line.push_back(m_lex[m_i].lexem_name);
 	m_key = true;
-	if (m_lex[m_i + 1].line == m_lex[m_i].line)
+    if (m_lex[m_i + 1].line == m_lex[m_i].line)
+    {
 		if (m_lex[m_i + 1].lexem_type != "Constant")
 			m_key = false;
-		else if ((m_lex[m_i + 2].line == m_lex[m_i].line) and (m_lex[m_i + 2].lexem_type != "k_rem"))
+        else if ((m_lex[m_i + 2].line == m_lex[m_i].line) || (m_lex[m_i + 2].lexem_type != "k_rem"))
 			m_key = false;
-
+    }
 	if (m_key) 
 	{
 		m_is_correct.push_back(true);
@@ -934,7 +945,7 @@ void Syntaxer::i()
 	int q = m_st.top();
 	m_st.pop();
 	if (q != p)
-		std::cout << "Ïåðåìåííàÿ NEXT-îïåðàòîðà îòëè÷íà îò ïåðåìåííîé FOR-îïåðàòîðà. " << m_st.top() << " - ïðåäïîëàãàåìàÿ ïåðåìåííàÿ" << std::endl;
+        //m_out << "Ïåðåìåííàÿ NEXT-îïåðàòîðà îòëè÷íà îò ïåðåìåííîé FOR-îïåðàòîðà. " << m_st.top() << " - ïðåäïîëàãàåìàÿ ïåðåìåííàÿ" << std::endl;
 	m_st.pop();
 }
 

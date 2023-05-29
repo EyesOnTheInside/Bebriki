@@ -31,9 +31,9 @@ public:
     */
     void TranslateCode();
 private:
-    CodeGenerator m_gen;                            // генератор кода
-    Syntaxer m_synt;                                // синтаксер
-    LexicalBlock m_lexer;                           // лексический блок
+    CodeGenerator* m_gen;                            // генератор кода
+    Syntaxer* m_synt;                                // синтаксер
+    LexicalBlock* m_lexer;                           // лексический блок
     std::vector<std::vector<std::string>> m_lines;  // вектор строк
     std::vector<Token> m_lexems;                    // вектор лексем
 };
